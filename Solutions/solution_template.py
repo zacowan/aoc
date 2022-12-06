@@ -30,6 +30,6 @@ def solve(puzzle_input: str):
 if __name__ == "__main__":
     for path in sys.argv[1:]:
         print(f"{path}:")
-        input_string = pathlib.Path(path).read_text("utf-8").strip()
+        input_string = pathlib.Path(path).read_text("utf-8")
         solutions = solve(input_string)
         print("\n".join(str(solution) for solution in solutions))
