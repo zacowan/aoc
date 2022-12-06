@@ -22,6 +22,7 @@ def solve(puzzle_input: str):
     """Solve the puzzle for the given input."""
     data = parse(puzzle_input)
     solution1 = part1(data)
+    data = parse(puzzle_input)
     solution2 = part2(data)
 
     return solution1, solution2
