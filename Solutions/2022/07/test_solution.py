@@ -1,6 +1,6 @@
 import pathlib
 import pytest
-import Solutions.solution_template as solution
+import solution
 
 PUZZLE_DIR = pathlib.Path(__file__).parent
 
@@ -17,10 +17,9 @@ def example2():
     return solution.parse(puzzle_input)
 
 
-@pytest.mark.skip(reason="Not implemented")
 def test_part1_example1(example1):
     """Test part 1 on example input."""
-    assert solution.part1(example1) == ...
+    assert solution.part1(example1) == 95437
 
 
 @pytest.mark.skip(reason="Not implemented")
