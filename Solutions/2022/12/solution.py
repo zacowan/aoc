@@ -76,7 +76,10 @@ def dfs(
 
 
 def part1(data: list[list[str]]):
-    """Solve part 1."""
+    """Solve part 1.
+
+    Key idea: shortest path. Should used Dijkstra's or A*.
+    """
     # Find the start location
     start_location: tuple[int, int] = (-1, -1)
     for row_i, row in enumerate(data):
