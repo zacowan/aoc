@@ -2,6 +2,7 @@
 import pathlib
 import sys
 import math
+from collections import defaultdict
 
 
 def parse(puzzle_input: str):
@@ -18,61 +19,42 @@ def parse(puzzle_input: str):
     return data
 
 
-def is_within_elevation(a: str, b: str) -> bool:
-    """Returns whether or not b is within climbing distance of a."""
-    if a == "S":
-        a = "a"
-    if b == "E":
-        b = "z"
-    return 0 <= ord(b) - ord(a) <= 1
-
-
 def get_visitable_neighbors(
-    a: tuple[int, int], data: list[list[str]]
+    node: tuple[int, int], graph: list[list[str]]
 ) -> list[tuple[int, int]]:
     """Returns visitable neighbor locations."""
     neighbors: list[tuple[int, int]] = []
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     for direction in directions:
-        b = (a[0] + direction[0], a[1] + direction[1])
+        neighbor = (node[0] + direction[0], node[1] + direction[1])
 
-        if b[0] < 0 or b[0] > len(data):
+        if neighbor[0] < 0 or neighbor[0] >= len(graph):
             continue
-        if b[1] < 0 or b[1] > len(data):
+        if neighbor[1] < 0 or neighbor[1] >= len(graph[0]):
             continue
 
-        a_value = data[a[0]][a[1]]
+        a_value = graph[node[0]][node[1]]
         if a_value == "S":
             a_value = "a"
-        b_value = data[b[0]][b[1]]
+        b_value = graph[neighbor[0]][neighbor[1]]
         if b_value == "E":
             b_value = "z"
         if 0 <= ord(b_value) - ord(a_value) <= 1:
-            neighbors.append(b)
+            neighbors.append(neighbor)
     return neighbors
 
 
-def dfs(
-    location: tuple[int, int],
-    data: list[list[str]],
-    visited: set[tuple[int, int]],
-    path_length: int,
-):
-    visited.add(location)
+def get_elevation_diff(
+    a: tuple[int, int], b: tuple[int, int], graph: list[list[str]]
+) -> int:
+    val_a = ord(graph[a[0]][a[1]])
+    val_b = ord(graph[b[0]][b[1]])
+    diff = val_b - val_a
 
-    if data[location[0]][location[1]] == "E":
-        return path_length
+    if diff < 0:
+        return 0
 
-    # Get visitable neighbors
-    neighbors = get_visitable_neighbors(location, data)
-    if len(neighbors) == 0:
-        return int(math.inf)
-
-    path_lengths: list[int] = []
-    for neighbor in neighbors:
-        path_lengths.append(dfs(neighbor, data, visited, path_length + 1))
-
-    return min(path_lengths)
+    return diff
 
 
 def part1(data: list[list[str]]):
@@ -80,23 +62,43 @@ def part1(data: list[list[str]]):
 
     Key idea: shortest path. Should used Dijkstra's or A*.
     """
-    # Find the start location
+    # Find the start location and get all nodes
+    unvisited: list[tuple[int, int]] = []
     start_location: tuple[int, int] = (-1, -1)
+    end_location: tuple[int, int] = (-1, -1)
+
     for row_i, row in enumerate(data):
-        for col_i, neighbor_elevation in enumerate(row):
-            if neighbor_elevation == "S":
+        for col_i, elevation in enumerate(row):
+            unvisited.append((row_i, col_i))
+            if elevation == "S":
                 start_location = (row_i, col_i)
-                break
+            elif elevation == "E":
+                end_location = (row_i, col_i)
 
-    # Get visitable neighbors
-    neighbors = get_visitable_neighbors(start_location, data)
+    shortest_path = defaultdict(lambda: math.inf)
+    previous = {}
+    shortest_path[start_location] = 0
 
-    # Do DFS starting at each neighbor location
-    path_lengths: list[int] = []
-    for location in neighbors:
-        path_lengths.append(dfs(location, data, set([start_location]), 1))
+    while unvisited:
+        min_node = unvisited[0]
+        min_i = 0
+        for i, node in enumerate(unvisited):
+            if shortest_path[node] < shortest_path[min_node]:
+                min_node = node
+                min_i = i
 
-    return min(path_lengths)
+        neighbors = get_visitable_neighbors(min_node, data)
+        for neighbor in neighbors:
+            cost = shortest_path[min_node] + get_elevation_diff(
+                min_node, neighbor, data
+            )
+            if cost < shortest_path[neighbor]:
+                shortest_path[neighbor] = cost
+                previous[neighbor] = min_node
+
+        unvisited.pop(min_i)
+
+    return shortest_path[end_location]
 
 
 def part2(data):
